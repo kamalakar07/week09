@@ -5,7 +5,7 @@ metadata:
   labels:
     app: calculator
 spec:
-  replicas: 2
+  replicas: 3
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -21,7 +21,7 @@ spec:
     spec:
       containers:
       - name: calculator
-        image: dlambrig/week8:1.1
+        image: leszko/calculator
         imagePullPolicy: Always
         ports:
         - containerPort: 8080
