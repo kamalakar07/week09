@@ -39,7 +39,6 @@ spec:
 
         # test calculator for div AFTER image update
         echo testing calculator for div AFTER image upgrade.gives 200 or 404 status code based on if div functionality exists
-        CALCIP=$(curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$NAMESPACE/services?fieldSelector=metadata.name%3Dcalculator-service | jq -r .items[0].spec.clusterIP)                  
         curl -i calculator-service.$NAMESPACE.svc.cluster.local:8080/div?a=10\\&b=2
 				'''
 			}
