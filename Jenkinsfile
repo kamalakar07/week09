@@ -40,6 +40,7 @@ spec:
                 
                 sh'''
                 # Update calculator
+                NAMESPACE=staging
                 curl -k -v -XPUT -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"  -H "Accept: application/yaml" -H "Content-Type: application/yaml" -H "User-Agent: kubectl/v1.21.5 (darwin/amd64) kubernetes/aea7bba" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/apis/apps/v1/namespaces/$NAMESPACE/deployments/calculator-deployment?fieldManager=kubectl-client-side-apply --data-binary '@calculator.yaml'
                 
                 # Give time for deployments to be up
