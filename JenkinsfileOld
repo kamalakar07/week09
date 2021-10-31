@@ -1,0 +1,58 @@
+podTemplate(yaml : '''
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+  - name: centos
+    image : centos
+    command:
+    - sleep
+    args:
+    - 99d
+  restartPolicy: Never
+''') {
+  node(POD_LABEL) {
+
+    git url: 'https://github.com/kamalakar07/week09.git', branch: 'main'
+    
+    container('centos') {
+			stage('preprocess') {
+				sh '''
+				yum install -y jq
+				'''
+			}
+			stage('Test calculator updates') {
+				sh '''
+				# set context value. change-pod-count for test 1 and change-image for test 2
+				CONTEXT=change-image
+				NAMESPACE=default
+				#
+				if [ $CONTEXT == change-pod-count ]; then 
+					curl -k -v -XPATCH -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"  -H "Accept: application/json" -H "Content-Type: application/strategic-merge-patch+json" -H "User-Agent: kubectl/v1.21.5 (darwin/amd64) kubernetes/aea7bba" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/apis/apps/v1/namespaces/$NAMESPACE/deployments/calculator-deployment?fieldManager=kubectl-client-side-apply --data '{"spec":{"replicas":2}}'
+				fi
+
+				if [ $CONTEXT == change-image ]; then 
+					#set CALCIP value
+					CALCIP=$(curl -k -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/api/v1/namespaces/$NAMESPACE/services?fieldSelector=metadata.name%3Dcalculator-service | jq -r .items[0].spec.clusterIP)
+					
+					# test calculator for div before image update
+					echo testing calculator for div before image upgrade. this should give 404 code
+					curl -i $CALCIP:8080/div?a=10\\&b=2
+					
+					# Update image name
+					curl -k -v -XPATCH -H "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)"  -H "Accept: application/json" -H "Content-Type: application/strategic-merge-patch+json" -H "User-Agent: kubectl/v1.21.5 (darwin/amd64) kubernetes/aea7bba" https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT/apis/apps/v1/namespaces/$NAMESPACE/deployments/calculator-deployment?fieldManager=kubectl-client-side-apply --data '{"spec":{"template":{"spec":{"containers":[{"name":"calculator","image":"dlambrig/week8:1.1"}]}}}}'
+					
+					# Give time for deployments to be up
+					sleep 60
+
+					# test calculator for div AFTER image update
+					echo testing calculator for div AFTER image upgrade. this should give 200 code and output of 5
+					curl -i $CALCIP:8080/div?a=10\\&b=2
+				fi	
+				'''
+			}
+
+    }
+
+  }
+}
