@@ -13,7 +13,7 @@ spec:
 ''') {
   node(POD_LABEL) {
 
-    git url: 'https://github.com/kamalakar07/week09.git', branch: 'main'
+    git url: 'https://github.com/kamalakar07/week09.git', branch: env.BRANCH_NAME
     
     container('centos') {
 			stage('preprocess') {
@@ -24,7 +24,7 @@ spec:
 			stage('Test calculator updates') {
 				
 				
-                #If calcservice is already running, check if the division functionailty exists.
+                //If calcservice is already running, check if the division functionailty exists.
                 try{
                     sh '''
 				    NAMESPACE=staging
